@@ -2,7 +2,7 @@ import logging
 import time
 from ecfr_api import ECFRAPI
 from ecfr_database import ECFRDatabase
-from metrics import Metrics
+from code_info import CodeInfo
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,7 @@ class DataLoader:
         self.db.commit()
 
     def process_code_references(self):
+        # Loop through all code references that have not been processed yet and calculate their metrics
         code_references = self.db.get_code_references_for_processing()
         for code_reference in code_references:
             try:
@@ -61,9 +62,19 @@ class DataLoader:
                 )
 
                 if xml is not None:
-                    metrics = Metrics(xml)
-                    word_count = metrics.get_word_count()
-                    self.db.set_code_reference_metrics(code_reference["id"], word_count)
+                    code_info = CodeInfo(code_reference, xml)
+                    reference_text = code_info.get_reference_text()
+                    name = code_info.get_name()
+                    link = code_info.get_link()
+                    metrics = code_info.calculate_burden_score()
+                    self.db.set_code_reference_metrics(
+                        code_reference["id"],
+                        reference_text,
+                        name,
+                        link,
+                        metrics["burden_score"],
+                        metrics["word_count"],
+                    )
                     self.db.commit()
             except Exception as e:
                 logger.error(
@@ -71,6 +82,9 @@ class DataLoader:
                 )
                 self.db.set_code_reference_processing_failed(code_reference["id"])
                 self.db.commit()
+        # Update the burden category (HIGH, MEDIUM, LOW) for all code references
+        self.db.calculate_burden_categories()
+        self.db.commit()
 
     def run(self):
         try:
@@ -86,6 +100,22 @@ class DataLoader:
             logger.error(f"Error: {e}")
         finally:
             self.db.close()
+
+    def temp_run(self):
+        code_references = self.db.get_code_references_for_burden_score()
+        for code_reference in code_references:
+            xml = self.api.get_xml(
+                code_reference["latest_issue_date"],
+                code_reference["title_id"],
+                code_reference["subtitle"],
+                code_reference["chapter"],
+                code_reference["subchapter"],
+                code_reference["part"],
+                code_reference["subpart"],
+                code_reference["section"],
+            )
+            code_info = CodeInfo(code_reference, xml)
+            print(code_info.calculate_burden_score())
 
 
 if __name__ == "__main__":

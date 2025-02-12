@@ -1,4 +1,5 @@
 import datetime
+import math
 import sqlite3
 
 
@@ -48,7 +49,12 @@ class ECFRDatabase:
             subpart TEXT,
             section TEXT,
             processed INTEGER DEFAULT 0,
+            reference_text TEXT,
+            name TEXT,
+            link TEXT,
+            burden_score REAL,
             word_count INTEGER,
+            burden_category TEXT,
             FOREIGN KEY (agency_id) REFERENCES agencies(id),
             FOREIGN KEY (title_id) REFERENCES titles(id))"""
         )
@@ -129,16 +135,50 @@ class ECFRDatabase:
             WHERE processed = 0"""
         ).fetchall()
 
-    def set_code_reference_metrics(self, id, word_count):
+    def get_code_references_for_burden_score(self):
+        return self.conn.execute(
+            """SELECT cr.id, title_id, cr.subtitle, cr.chapter, cr.subchapter, cr.part, cr.subpart, cr.section, t.latest_issue_date 
+            FROM code_references cr 
+            JOIN titles t ON cr.title_id = t.id 
+            WHERE processed = 1 AND word_count > 200000 AND word_count < 240000"""
+        ).fetchall()
+
+    def set_code_reference_metrics(
+        self, id, reference_text, name, link, burden_score, word_count
+    ):
         self.conn.execute(
-            "UPDATE code_references SET processed = 1,word_count = ? WHERE id = ?",
-            (word_count, id),
+            "UPDATE code_references SET processed = 1, reference_text = ?, name = ?, link = ?, burden_score = ?, word_count = ? WHERE id = ?",
+            (reference_text, name, link, burden_score, word_count, id),
         )
 
     def set_code_reference_processing_failed(self, id):
         self.conn.execute(
             "UPDATE code_references SET processed = -1 WHERE id = ?",
             (id,),
+        )
+
+    def calculate_burden_categories(self):
+        # Get statistical measures of the burden scores
+        stats = self.conn.execute(
+            """SELECT AVG(burden_score) AS mean, AVG((cr.burden_score - sub.a) * (cr.burden_score - sub.a)) AS var FROM code_references cr, (SELECT avg(burden_score) AS a FROM code_references) AS sub WHERE processed = 1"""
+        ).fetchone()
+
+        mean = stats[0]
+        variance = stats[1]
+        std_dev = math.sqrt(variance)
+        print(f"{mean} {std_dev}")
+
+        # Calculate the burden category for each code reference
+        self.conn.execute(
+            """UPDATE code_references
+            SET burden_category = 
+                CASE 
+                    WHEN burden_score > (? + ?) THEN 'HIGH'
+                    WHEN burden_score < (? - ?) THEN 'LOW'
+                    ELSE 'MEDIUM'
+                END
+            WHERE processed = 1""",
+            (mean, std_dev, mean, std_dev),
         )
 
     def commit(self):
