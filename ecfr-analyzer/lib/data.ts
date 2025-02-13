@@ -3,7 +3,7 @@ import { open } from "sqlite";
 
 async function initializeDatabase() {
   return await open({
-    filename: "./ecfr.db",
+    filename: "./public/ecfr.db",
     driver: sqlite3.Database,
   });
 }
