@@ -6,7 +6,7 @@ import { getAgency, getAgencyCodeReferences, getRelatedAgencies } from "@/lib/da
 import { Badge, Button, Card, Divider, SimpleGrid, Text, Title } from "@mantine/core";
 import Link from "next/link";
 
-export default async function AgencyPage({ params }: { params: { id: string } }) {
+export default async function AgencyPage({ params }: { params: Promise<{ id: string }> }) {
   const agency = await getAgency((await params).id);
   const references = await getAgencyCodeReferences((await params).id);
   const relatedAgencies = await getRelatedAgencies((await params).id);
