@@ -10,7 +10,7 @@ class CodeInfo:
 
     def get_reference_text(self):
         reference_text = (
-            f"{self.code_reference['title_id']} CFR {self.code_reference['chapter']}"
+            f"{self.code_reference['title_id']} CFR"
         )
         if self.code_reference["subtitle"] is not None:
             reference_text += f" Subtitle {self.code_reference['subtitle']}"

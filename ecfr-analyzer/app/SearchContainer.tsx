@@ -1,8 +1,9 @@
 'use client';
 
-import { Badge, Card, Divider, Flex, Group, Input, SegmentedControl, SimpleGrid, Text, Title } from "@mantine/core";
-import Link from "next/link";
+import { Input, SegmentedControl, SimpleGrid, Text } from "@mantine/core";
 import { useState } from "react";
+import AgencyCard from "./AgencyCard";
+import AgencyList from "./AgencyList";
 
 export default function SearchContainer({ initAgencies }: { initAgencies: Agency[] }) {
   const [agencies, setAgencies] = useState(initAgencies);
@@ -43,8 +44,6 @@ export default function SearchContainer({ initAgencies }: { initAgencies: Agency
       <Text mt="md" size="lg">Search for an agency and click on it to see more details.</Text>
       <Input size="lg" mt="md" radius="md" placeholder="Search agencies, e.g. FDA or Department of State"
         value={filter} onChange={(e) => setFilter(e.target.value)} />
-
-
       Sort: <SegmentedControl
         mt="md"
         radius="md"
@@ -54,55 +53,5 @@ export default function SearchContainer({ initAgencies }: { initAgencies: Agency
       />
       <AgencyList agencies={sortedAndFilteredAgencies} />
     </>
-  );
-}
-
-function AgencyList({ agencies }: { agencies: Agency[] }) {
-  return (
-    <SimpleGrid mt="md" cols={{ base: 1, md: 2, lg: 3 }}>
-      {agencies.map((agency) => <AgencyCard key={agency.id} agency={agency} />)}
-    </SimpleGrid>
-  );
-}
-
-function AgencyCard({ agency }: { agency: Agency }) {
-  return (
-    <Card
-      withBorder
-      shadow="sm"
-      p="xl"
-      radius="md"
-      component={Link}
-      href={`/agency/${agency.id}`}>
-
-      <Title order={3}>{agency.short_name || agency.name}</Title>
-      {agency.short_name && <Text size="sm" mt="md">{agency.name}</Text>}
-      <Divider mt="md" />
-      <Group justify="space-between" mt="md">
-        <Flex direction="column" align="center">
-          <Text size="lg" fw={500}><MetricValue value={agency.total_word_count} /></Text>
-          <Text size="sm">Words</Text>
-        </Flex>
-        <Flex direction="column" align="center">
-          <Badge color={agency.burden_category === "LOW" ? "green" : agency.burden_category === "MEDIUM" ? "yellow" : "red"} size="lg">{agency.burden_category || "N/A"}</Badge>
-          <Text size="sm">Compliance Burden</Text>
-        </Flex>
-      </Group>
-    </Card>
-  );
-}
-
-function MetricValue({ value }: { value: number }) {
-  const formatNumber = (num: number) => {
-    if (num > 1000000) {
-      return `${(num / 1000000).toFixed(1)}M`;
-    } else if (num > 1000) {
-      return `${(num / 1000).toFixed(1)}k`;
-    } else {
-      return num && num.toString() || "Unk";
-    }
-  }
-  return (
-    <span>{formatNumber(value)}</span>
   );
 }

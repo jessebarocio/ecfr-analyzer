@@ -126,7 +126,6 @@ if __name__ == "__main__":
     loader = DataLoader(
         api_base_url="https://www.ecfr.gov", db_path="ecfr.db", cache_dir="xmlcache"
     )
-    loader.db.calculate_agency_burden()
-    loader.db.commit()
+    loader.run()
     end = time.time()
     logger.debug(f"Execution time: {end - start} seconds")

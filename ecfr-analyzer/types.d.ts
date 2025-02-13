@@ -7,3 +7,12 @@ declare type Agency = {
   burden_category: string;
   children: Agency[];
 };
+
+declare type AgencyCodeReference = {
+  id: number;
+  reference_text: string;
+  name: string;
+  word_count: number;
+  burden_category: string;
+  link: string;
+};
