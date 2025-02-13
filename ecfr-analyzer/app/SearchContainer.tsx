@@ -20,14 +20,14 @@ export default function SearchContainer({ initAgencies }: { initAgencies: Agency
       sortFn: (a: Agency, b: Agency) => b.name.localeCompare(a.name),
     },
     {
-      label: "Word Count ↓",
-      value: "wcdesc",
-      sortFn: (a: Agency, b: Agency) => b.total_word_count - a.total_word_count,
-    },
-    {
       label: "Word Count ↑",
       value: "wcasc",
       sortFn: (a: Agency, b: Agency) => a.total_word_count - b.total_word_count ,
+    },
+    {
+      label: "Word Count ↓",
+      value: "wcdesc",
+      sortFn: (a: Agency, b: Agency) => b.total_word_count - a.total_word_count,
     }
   ];
   const [sort, setSort] = useState(sortValues[0].value);
