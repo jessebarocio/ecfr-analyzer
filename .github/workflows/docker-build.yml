@@ -26,7 +26,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./ecfr-analyzer
           push: true
           tags: |
             ghcr.io/${{ github.repository }}:latest
