@@ -1,13 +1,15 @@
 import math
 import re
 
-
 class CodeInfo:
     def __init__(self, code_reference, xml):
         self.code_reference = code_reference
         self.xml = xml
         self.text_content = "".join(self.xml.itertext())
 
+    # Returns the reference text for a section of the CFR.
+    # e.g. Title 10, Subtitle A, Chapter I -> "10 CFR Chapter I"
+    # e.g. Title 10, Subtitle A, Chapter I, Part 1001 -> "10 CFR Part 1001"
     def get_reference_text(self):
         reference_text = (
             f"{self.code_reference['title_id']} CFR"
@@ -26,9 +28,11 @@ class CodeInfo:
             reference_text += f" Section {self.code_reference['section']}"
         return reference_text
 
+    # Returns the name of the section of the CFR.
     def get_name(self):
         return self.xml.xpath(".//HEAD[1]")[0].text.strip()
 
+    # Returns the link to the section of the CFR.
     def get_link(self):
         link = f"https://www.ecfr.gov/current/title-{self.code_reference['title_id']}"
         if self.code_reference["subtitle"] is not None:
@@ -40,6 +44,8 @@ class CodeInfo:
         if self.code_reference["part"] is not None:
             link += f"/part-{self.code_reference['part']}"
         return link
+
+    # Returns the burden score for the section of the CFR.
 
     def calculate_burden_score(self):
         text = self.text_content.lower()
@@ -64,6 +70,7 @@ class CodeInfo:
             re.findall(r"\b(penalty|violation|fine|enforcement|prohibited)\b", text)
         )
 
+        # Density score is a multiplier that accounts for the complexity of the section of code.
         density_score = (
             (requirements * 2.0 + 
              conditionals * 1.5 + 

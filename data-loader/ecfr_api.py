@@ -34,7 +34,7 @@ class ECFRAPI:
         # chapter it still returned the entire title. So instead, I'm downloading/caching the entire title and
         # using XPaths to filter down to the specific subtitle/chapter/part/subpart/section requested.
 
-        # Get the full XML for the given date and title from the cache. If it doesn't exist, download it.
+        # Get the full XML for the given date and title from the cache. If it doesn't exist, download and cache it.
         cache_file = os.path.join(self.cache_dir, f"{date}-title-{title_id}.xml")
         if not os.path.exists(cache_file):
             response = requests.get(
