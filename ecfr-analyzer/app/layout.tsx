@@ -4,6 +4,8 @@ import {
   MantineProvider,
   ColorSchemeScript,
   mantineHtmlProps,
+  Container,
+  Title,
 } from "@mantine/core";
 import { theme } from "../theme";
 
@@ -24,7 +26,12 @@ export default function RootLayout({ children }: { children: any }) {
         />
       </head>
       <body>
-        <MantineProvider theme={theme}>{children}</MantineProvider>
+        <MantineProvider theme={theme}>
+          <Container>
+            <Title order={1} mt="xl">eCFR Statistics</Title>
+            {children}
+          </Container>
+        </MantineProvider>
       </body>
     </html>
   );

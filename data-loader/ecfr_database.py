@@ -25,6 +25,9 @@ class ECFRDatabase:
                 name TEXT NOT NULL,
                 short_name TEXT,
                 parent_id TEXT,
+                burden_score REAL,
+                burden_category TEXT,
+                total_word_count INTEGER,
                 FOREIGN KEY (parent_id) REFERENCES agencies(id))"""
         )
 
@@ -178,6 +181,47 @@ class ECFRDatabase:
                     ELSE 'MEDIUM'
                 END
             WHERE processed = 1""",
+            (mean, std_dev, mean, std_dev),
+        )
+    
+    def calculate_agency_burden(self):
+        # Calculate the compliance burden for each agency.
+        self.conn.execute("""
+                          UPDATE agencies
+                          SET
+                            burden_score = subq.weighted_burden,
+                            total_word_count = subq.total_word_count
+                          FROM (
+                              SELECT 
+                                    agency_id, 
+                                    SUM(burden_score * word_count) / SUM(word_count) AS weighted_burden,
+                                    SUM(word_count) AS total_word_count
+                              FROM code_references
+                              WHERE processed = 1
+                              GROUP BY agency_id
+                          ) AS subq
+                          WHERE agencies.id = subq.agency_id
+                          """)
+        
+        # Get stats for the weighted burden scores
+        stats = self.conn.execute(
+            """SELECT AVG(burden_score) AS mean, AVG((ag.burden_score - sub.a) * (ag.burden_score - sub.a)) AS var FROM agencies ag, (SELECT avg(burden_score) AS a FROM agencies) AS sub WHERE ag.burden_score IS NOT NULL"""
+        ).fetchone()
+
+        mean = stats[0]
+        variance = stats[1]
+        std_dev = math.sqrt(variance)
+
+        # Calculate the burden category for each agency
+        self.conn.execute(
+            """UPDATE agencies
+            SET burden_category = 
+                CASE 
+                    WHEN burden_score > (? + ?) THEN 'HIGH'
+                    WHEN burden_score < (? - ?) THEN 'LOW'
+                    ELSE 'MEDIUM'
+                END
+            WHERE burden_score IS NOT NULL""",
             (mean, std_dev, mean, std_dev),
         )
 

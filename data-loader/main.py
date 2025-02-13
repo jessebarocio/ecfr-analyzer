@@ -84,6 +84,7 @@ class DataLoader:
                 self.db.commit()
         # Update the burden category (HIGH, MEDIUM, LOW) for all code references
         self.db.calculate_burden_categories()
+        self.db.calculate_agency_burden()
         self.db.commit()
 
     def run(self):
@@ -125,6 +126,7 @@ if __name__ == "__main__":
     loader = DataLoader(
         api_base_url="https://www.ecfr.gov", db_path="ecfr.db", cache_dir="xmlcache"
     )
-    loader.run()
+    loader.db.calculate_agency_burden()
+    loader.db.commit()
     end = time.time()
     logger.debug(f"Execution time: {end - start} seconds")
